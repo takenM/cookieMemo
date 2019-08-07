@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CookieMemo</title>
+    <script src=""></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+    <link rel="shortcut icon" href="https://image.flaticon.com/icons/png/128/164/164659.png" >
+    <style>
+        ul {
+            list-style: none;
+            padding-left: 0px;
+        }
+        li {
+            padding-left: 5%;
+            margin: 20px 0
+        }
+        .content {
+            width: 85%;
+        }
+        .operator {
+            width: 10%;
+        }
+        .memoItem {
+            display: flex;
+            border: #EEEEEE 1px solid;
+            border-radius: 5px;
+            box-shadow: 0 0 5px #EEEEEE;
+        }
+        textarea {
+            border: none;
+            box-shadow: 0 0 5px #EEEEEE;
+        }
+        
+    </style>
+</head>
+<body>
+    <ul id="memoList">
+        <li class="memoItem" id="memoOrigin" style="display:none">
+            <div class="content">
+                <p class="contentText">
+                </p>
+            </div>
+            <div class="operator">
+                <button class="copy">
+                    Copy
+                </button>
+                <button class="delete">
+                    Delete
+                </button>
+            </div>
+        </li>
+    </ul>
+    <textarea name="" id="text" cols="60" rows="10"></textarea><br>
+    <button id="create">+</button>
+</body>
+<script>
+    var originMemoItem = $('#memoOrigin')
+    
+    var memoIds;
+    var nextId;
+    
+    function initialize() {
+        memoIds = $.cookie("memoIds")
+        if (!memoIds) {
+            memoIds = [];
+            nextId = 0
+        } else {
+            memoIds = memoIds.split(',')
+            nextId = parseInt(memoIds[memoIds.length - 1]) + 1
+        }
+        $.each(memoIds, function(index, id){
+            let memoContent = $.cookie(id)
+            console.log(id)
+            memoItem(id, memoContent).appendTo($('#memoList'))
+        })
+    }
+    
+    $(function() {
+        initialize()
+    })
+    
+    function saveMemoIds() {
+        $.cookie('memoIds', memoIds.join(','))
+    }
+    
+    function memoItem(id, content) {
+//        console.log(content)
+        var item = originMemoItem.clone().attr("id", id)
+        item.find(".contentText").first().html(content.replace(/\r?\n/g, '<br>'))
+        item.show()
+        return item
+    }
+    
+    $("#create").on('click', function() {
+        var memoTextArea = $('#text')
+        var memoContent = memoTextArea.val()
+        if (memoContent == "") return
+        saveMemo(nextId, memoContent)
+        memoItem(nextId, memoContent).appendTo($('#memoList'))
+        memoIds.push(nextId++)
+        saveMemoIds()
+        memoTextArea.val("")
+    })
+    
+    $(document).on('click', ".delete", function() {
+        $(this).closest(".memoItem").remove()
+        let deleteId = $(this).closest(".memoItem").attr('id')
+        $.removeCookie(deleteId.toString())
+        let deleteIndex = memoIds.findIndex(item => item == deleteId)
+        memoIds.splice(deleteIndex, 1)
+        saveMemoIds()
+                
+    })
+    
+    function saveMemo(id, content) {
+        $.cookie(id, content)
+    }
+</script>
+</html>
